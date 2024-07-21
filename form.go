@@ -1,9 +1,9 @@
 package main
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -14,11 +14,24 @@ type Form struct {
     description textarea.Model
 }
 
+
+func NewTitle() textinput.Model {
+    ti := textinput.New()
+    ti.Placeholder = "What is the task's title?"
+    return ti
+}
+
+func NewDescription() textarea.Model {
+    ta := textarea.New()
+    ta.Placeholder = "Brief description"
+    return ta
+}
 func NewForm(focused status) *Form {
     form := &Form{focused: focused}
-    form.title = textinput.New()
+    form.title = NewTitle()
+    form.description = NewDescription()
+
     form.title.Focus()
-    form.description = textarea.New()
     return form
 }
 
@@ -41,7 +54,7 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     switch msg := msg.(type) {
     case tea.KeyMsg:
         switch  msg.String() {
-        case "ctrl+c", "q":
+        case "ctrl+c":
             return m, tea.Quit
         case "enter":
             if m.title.Focused() {
@@ -55,12 +68,13 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         }
     }
 
+    // Pass all other key presses to the inputs
     if m.title.Focused() {
         m.title, cmd = m.title.Update(msg)
         return m, cmd
     } else {
         m.description, cmd = m.description.Update(msg)
-        return models[board], cmd
+        return m, cmd
     }
 }
 

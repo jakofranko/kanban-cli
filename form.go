@@ -39,15 +39,6 @@ func (m Form) Init() tea.Cmd {
     return nil
 }
 
-func NewTask(status status, title string, description string) Task {
-    return Task{status: status, title: title, description: description}
-}
-
-func (m Form) CreateTask() tea.Msg {
-    task := NewTask(m.focused, m.title.Value(), m.description.Value())
-    return task
-}
-
 func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     var cmd tea.Cmd
 

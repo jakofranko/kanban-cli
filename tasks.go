@@ -1,5 +1,8 @@
-
 package main
+
+import (
+	tea "github.com/charmbracelet/bubbletea"
+)
 
 type status int
 
@@ -34,4 +37,13 @@ func (t Task) Title() string {
 
 func (t Task) Description() string {
 	return t.description
+}
+
+func NewTask(status status, title string, description string) Task {
+    return Task{status: status, title: title, description: description}
+}
+
+func (m Form) CreateTask() tea.Msg {
+    task := NewTask(m.focused, m.title.Value(), m.description.Value())
+    return task
 }

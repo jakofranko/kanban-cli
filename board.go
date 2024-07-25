@@ -150,6 +150,11 @@ func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
                 models[form] = UpdateForm(m.focused, currentTask.Title(), currentTask.Description(), currentIndex)
                 return models[form], nil
             case "d":
+                // We could do a confirmation screen, but for now just delete.
+                // Another option would be to archive items that are in the done
+                // column. Maybe a feature for when I'm using persistant storage.
+                i := m.lists[m.focused].Index()
+                m.lists[m.focused].RemoveItem(i)
                 return m, nil
         }
     case CreateTaskMsg:

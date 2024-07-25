@@ -16,6 +16,13 @@ const (
 )
 
 func main() {
+    f, err := tea.LogToFile("debug.log", "debug")
+    if err != nil {
+        fmt.Println("fatal:", err)
+        os.Exit(1)
+    }
+    defer f.Close()
+
     // NewBoard is defined in board.go
     // NewForm is defined in form.go
     models = []tea.Model{NewBoard(), NewForm(todo)}

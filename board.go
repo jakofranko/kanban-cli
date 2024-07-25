@@ -2,8 +2,8 @@ package main
 
 import (
     tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/lipgloss"
 )
 
 const divisor = 4
@@ -142,10 +142,23 @@ func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
                models[board] = m // save current model
                models[form] = NewForm(m.focused)
                return models[form], nil
+            case "e":
+                models[board] = m
+                currentList := m.lists[m.focused]
+                currentTask := currentList.SelectedItem().(Task)
+                currentIndex := currentList.Index()
+                models[form] = UpdateForm(m.focused, currentTask.Title(), currentTask.Description(), currentIndex)
+                return models[form], nil
+            case "d":
+                return m, nil
         }
-    case Task:
-        task := msg
+    case CreateTaskMsg:
+        task := msg.task
         return m, m.lists[task.status].InsertItem(len(m.lists[task.status].Items()), task)
+    case EditTaskMsg:
+        task := msg.task
+        i := msg.index
+        return m, m.lists[task.status].SetItem(i, task)
     case UpdateListMsg:
         listToUpdate := msg.update
         m.lists[listToUpdate].Update(nil)

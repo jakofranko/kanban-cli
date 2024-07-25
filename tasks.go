@@ -1,9 +1,5 @@
 package main
 
-import (
-	tea "github.com/charmbracelet/bubbletea"
-)
-
 type status int
 
 const (
@@ -16,6 +12,19 @@ type Task struct {
 	title       string
 	description string
 	status      status
+}
+
+type CreateTaskMsg struct {
+    task Task
+}
+
+type EditTaskMsg struct {
+    task Task
+    index int
+}
+
+type DeleteTaskMsg struct {
+    index int
 }
 
 func (t *Task) Next() {
@@ -43,7 +52,3 @@ func NewTask(status status, title string, description string) Task {
     return Task{status: status, title: title, description: description}
 }
 
-func (m Form) CreateTask() tea.Msg {
-    task := NewTask(m.focused, m.title.Value(), m.description.Value())
-    return task
-}

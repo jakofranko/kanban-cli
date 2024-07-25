@@ -12,8 +12,9 @@ type Form struct {
     focused status
     title textinput.Model
     description textarea.Model
+    editing bool
+    index int
 }
-
 
 func NewTitle() textinput.Model {
     ti := textinput.New()
@@ -26,10 +27,26 @@ func NewDescription() textarea.Model {
     ta.Placeholder = "Brief description"
     return ta
 }
+
 func NewForm(focused status) *Form {
     form := &Form{focused: focused}
     form.title = NewTitle()
     form.description = NewDescription()
+    form.editing = false
+
+    form.title.Focus()
+    return form
+}
+
+func UpdateForm(focused status, title string, description string, index int) *Form {
+    form := &Form{focused: focused}
+    form.title = NewTitle()
+    form.description = NewDescription()
+    form.editing = true
+    form.index = index
+
+    form.title.SetValue(title)
+    form.description.SetValue(title)
 
     form.title.Focus()
     return form
@@ -54,6 +71,11 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
                 return m, textarea.Blink
             } else {
                 models[form] = m
+
+                if m.editing {
+                    return models[board], m.UpdateTask
+                }
+
                 return models[board], m.CreateTask
             }
         }
@@ -71,4 +93,14 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Form) View() string {
     return lipgloss.JoinVertical(lipgloss.Left, m.title.View(), m.description.View())
+}
+
+func (m Form) CreateTask() tea.Msg {
+    task := NewTask(m.focused, m.title.Value(), m.description.Value())
+    return CreateTaskMsg{task: task}
+}
+
+func (m Form) UpdateTask() tea.Msg {
+    task := NewTask(m.focused, m.title.Value(), m.description.Value())
+    return EditTaskMsg{task: task, index: m.index}
 }

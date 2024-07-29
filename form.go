@@ -7,6 +7,14 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// Styles
+var titleStyle = lipgloss.NewStyle().
+    Padding(1).
+    BorderStyle(lipgloss.RoundedBorder()).
+    BorderForeground(lipgloss.Color("33"))
+
+var descStyle = titleStyle
+
 // Form Model
 type Form struct {
     focused status
@@ -20,6 +28,14 @@ func NewTitle() textinput.Model {
     ti := textinput.New()
     ti.Placeholder = "What is the task's title?"
     return ti
+}
+
+func TitleView(title textinput.Model) string {
+    return titleStyle.Render(title.View())
+}
+
+func DescView(title textarea.Model) string {
+    return descStyle.Render(title.View())
 }
 
 func NewDescription() textarea.Model {
@@ -64,7 +80,7 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         switch  msg.String() {
         case "ctrl+c":
             return m, tea.Quit
-        case "enter":
+        case "ctrl+y":
             if m.title.Focused() {
                 m.title.Blur()
                 m.description.Focus()
@@ -92,7 +108,7 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Form) View() string {
-    return lipgloss.JoinVertical(lipgloss.Left, m.title.View(), m.description.View())
+    return lipgloss.JoinVertical(lipgloss.Left, TitleView(m.title), DescView(m.description))
 }
 
 func (m Form) CreateTask() tea.Msg {

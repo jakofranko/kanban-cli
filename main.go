@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
-
 
 // Models
 var models []tea.Model
@@ -25,6 +25,7 @@ func main() {
 
     // NewBoard is defined in board.go
     // NewForm is defined in form.go
+    log.Println("Starting Cli...")
     models = []tea.Model{NewBoard(), NewForm(todo)}
 	m := models[board]
 	p := tea.NewProgram(m)

@@ -109,8 +109,8 @@ func (t *Task) Merge(newT Task) {
 	}
 }
 
-func NewTask(status status, name string, info string) Task {
-	return Task{Status: status, Name: name, Info: info}
+func NewTask(status status, name string, info string, id int, project string) Task {
+	return Task{Status: status, Name: name, Info: info, Id: id, Project: project}
 }
 
 type TaskDB struct {

@@ -27,7 +27,9 @@ func main() {
 	// NewBoard is defined in board.go
 	// NewForm is defined in form.go
 	log.Println("Starting Cli...")
-	models = []tea.Model{NewBoard(), NewForm(todo)}
+
+	// TODO confirm that the new form project here doesn't matter?
+	models = []tea.Model{NewBoard(), NewForm(todo, "not real")}
 	m := models[board]
 	p := tea.NewProgram(m)
 

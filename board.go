@@ -25,6 +25,7 @@ type Board struct {
 	err      error
 	loaded   bool
 	quitting bool
+	project  string
 }
 
 type UpdateListMsg struct {
@@ -174,6 +175,9 @@ func (m *Board) initLists(width, height int) {
 }
 
 func (m Board) Init() tea.Cmd {
+	// TODO set project when initializing a new board
+	// from a as of yet non-existent project view
+	m.project = "test project"
 	return nil
 }
 
@@ -203,14 +207,15 @@ func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.MoveToNext
 		case "n":
 			models[board] = m // save current model
-			models[form] = NewForm(m.focused)
+			models[form] = NewForm(m.focused, m.project)
+
 			return models[form], nil
 		case "e":
-			models[board] = m
-			currentList := m.lanes[m.focused]
-			currentTask := currentList.list.SelectedItem().(Task)
-			currentIndex := currentList.list.Index()
-			models[form] = UpdateForm(m.focused, currentTask.Title(), currentTask.Description(), currentIndex)
+			models[board] = m // save current model
+			currentTask := m.lanes[m.focused].list.SelectedItem().(Task)
+			currentIndex := m.lanes[m.focused].list.Index()
+			models[form] = UpdateForm(currentTask, currentIndex)
+
 			return models[form], nil
 		case "d":
 			// We could do a confirmation screen, but for now just delete.
@@ -232,20 +237,18 @@ func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case CreateTaskMsg:
 		task := msg.task
 
-		// Insert into DB
-		taskDB := GetDB()
-		defer taskDB.db.Close()
-		taskDB.Insert(task.Name, task.Info, "", task.Status)
-
 		// Insert into list
 		return m, m.lanes[task.Status].list.InsertItem(len(m.lanes[task.Status].list.Items()), task)
 	case EditTaskMsg:
 		task := msg.task
 		i := msg.index
+
+		// Update in list
 		return m, m.lanes[task.Status].list.SetItem(i, task)
 	case UpdateListMsg:
 		listToUpdate := msg.update
 		m.lanes[listToUpdate].list.Update(nil)
+
 		return m, nil
 	}
 

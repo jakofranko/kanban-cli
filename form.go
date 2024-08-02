@@ -18,10 +18,12 @@ var descStyle = titleStyle
 // Form Model
 type Form struct {
 	focused     status
+	editing     bool
+	index       int // Index within current list
 	title       textinput.Model
 	description textarea.Model
-	editing     bool
-	index       int
+	project     string
+	id          int // DB id of task
 }
 
 func NewTitle() textinput.Model {
@@ -44,25 +46,28 @@ func NewDescription() textarea.Model {
 	return ta
 }
 
-func NewForm(focused status) *Form {
+func NewForm(focused status, project string) *Form {
 	form := &Form{focused: focused}
 	form.title = NewTitle()
 	form.description = NewDescription()
 	form.editing = false
+	form.project = project
 
 	form.title.Focus()
 	return form
 }
 
-func UpdateForm(focused status, title string, description string, index int) *Form {
-	form := &Form{focused: focused}
+func UpdateForm(task Task, index int) *Form {
+	form := &Form{focused: task.Status}
 	form.title = NewTitle()
 	form.description = NewDescription()
 	form.editing = true
 	form.index = index
 
-	form.title.SetValue(title)
-	form.description.SetValue(title)
+	form.title.SetValue(task.Name)
+	form.description.SetValue(task.Info)
+	form.id = task.Id
+	form.project = task.Project
 
 	form.title.Focus()
 	return form
@@ -113,16 +118,24 @@ func (m Form) View() string {
 }
 
 func (m Form) CreateTask() tea.Msg {
-	task := NewTask(m.focused, m.title.Value(), m.description.Value())
+	task := NewTask(m.focused, m.title.Value(), m.description.Value(), 0, m.project)
 
 	// Insert task into db
-	// TODO
+	taskDB := GetDB()
+	defer taskDB.db.Close()
+	taskDB.Insert(task.Name, task.Info, task.Project, task.Status)
 
 	// Return create task message
 	return CreateTaskMsg{task: task}
 }
 
 func (m Form) UpdateTask() tea.Msg {
-	task := NewTask(m.focused, m.title.Value(), m.description.Value())
+	task := NewTask(m.focused, m.title.Value(), m.description.Value(), m.id, m.project)
+
+	// Update task in db
+	taskDB := GetDB()
+	defer taskDB.db.Close()
+	taskDB.Update(task)
+
 	return EditTaskMsg{task: task, index: m.index}
 }

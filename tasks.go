@@ -8,6 +8,8 @@ import (
 	"reflect"
 )
 
+// The number of swim lanes should be dynamic, as well as find their
+// appropriate items in the task db according to this list only.
 type status int
 
 const (

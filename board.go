@@ -8,8 +8,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const divisor = 4
-
 // Styles
 var (
 	helpStyle = lipgloss.NewStyle().
@@ -131,46 +129,10 @@ func (m *Board) initLists(width, height int) {
 	inProgressLane := new(SwimLane)
 	doneLane := new(SwimLane)
 
-	// Get lists from the TaskDB by status.
-	// For now though, just use empty lists.
-	var todoList []list.Item
-	var inProgressList []list.Item
-	var doneList []list.Item
-
-	taskDB := GetDB()
-	defer taskDB.db.Close()
-
-	todoRows, err := taskDB.GetByStatus(todo)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, row := range todoRows {
-		todoList = append(todoList, row)
-	}
-
-	ipRows, err := taskDB.GetByStatus(inProgress)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, row := range ipRows {
-		inProgressList = append(inProgressList, row)
-	}
-
-	doneRows, err := taskDB.GetByStatus(done)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, row := range doneRows {
-		doneList = append(doneList, row)
-	}
-
 	m.lanes = []SwimLane{
-		todoLane.Init(width, height, 4, "To Do", todoList),
-		inProgressLane.Init(width, height, 4, "In Progress", inProgressList),
-		doneLane.Init(width, height, 4, "Done", doneList),
+		todoLane.Init(width, height, todo),
+		inProgressLane.Init(width, height, inProgress),
+		doneLane.Init(width, height, done),
 	}
 }
 

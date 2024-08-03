@@ -56,7 +56,7 @@ func (s *SwimLane) Init(width int, height int, status status) SwimLane {
 		items = append(items, task)
 	}
 
-	s.list = list.New([]list.Item{}, list.NewDefaultDelegate(), width/divisor, height-(pad*2))
+	s.list = list.New([]list.Item{}, list.NewDefaultDelegate(), width/divisor, (height-(pad*2))/2)
 	s.list.Title = title
 	s.list.SetItems(items)
 	s.list.SetShowHelp(false)

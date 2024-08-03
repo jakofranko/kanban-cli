@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -24,6 +26,8 @@ type Board struct {
 	loaded   bool
 	quitting bool
 	project  string
+	help     help.Model
+	keys     boardKeyMap
 }
 
 type UpdateListMsg struct {
@@ -32,7 +36,10 @@ type UpdateListMsg struct {
 }
 
 func NewBoard() *Board {
-	return &Board{}
+	return &Board{
+		keys: boardKeys,
+		help: help.New(),
+	}
 }
 
 func (m *Board) Next() {
@@ -157,29 +164,32 @@ func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.lanes[m.focused].Focus()
 		}
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
+		switch {
+		case key.Matches(msg, m.keys.Quit):
 			m.quitting = true
 			return m, tea.Quit
-		case "left", "h":
+		case key.Matches(msg, m.keys.Left):
 			m.Prev()
-		case "right", "l":
+		case key.Matches(msg, m.keys.Right):
 			m.Next()
-		case "enter":
+		case key.Matches(msg, m.keys.Move):
 			return m, m.MoveToNext
-		case "n":
+		case key.Matches(msg, m.keys.Help):
+			m.help.ShowAll = !m.help.ShowAll
+			return m, nil
+		case key.Matches(msg, m.keys.New):
 			models[board] = m // save current model
 			models[form] = NewForm(m.focused, m.project)
 
 			return models[form], nil
-		case "e":
+		case key.Matches(msg, m.keys.Edit):
 			models[board] = m // save current model
 			currentTask := m.lanes[m.focused].list.SelectedItem().(Task)
 			currentIndex := m.lanes[m.focused].list.Index()
 			models[form] = UpdateForm(currentTask, currentIndex)
 
 			return models[form], nil
-		case "d":
+		case key.Matches(msg, m.keys.Delete):
 			// We could do a confirmation screen, but for now just delete.
 			// Another option would be to archive items that are in the done
 			// column. Maybe a feature for when I'm using persistant storage.
@@ -230,12 +240,14 @@ func (m Board) View() string {
 		ipView := m.lanes[inProgress].View()
 		doneView := m.lanes[done].View()
 
-		return lipgloss.JoinHorizontal(
+		listsView := lipgloss.JoinHorizontal(
 			lipgloss.Left,
 			todoView,
 			ipView,
 			doneView,
 		)
+
+		return lipgloss.JoinVertical(lipgloss.Center, listsView, m.help.View(m.keys))
 	} else {
 		return "loading..."
 	}

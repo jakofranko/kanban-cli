@@ -9,16 +9,18 @@ import (
 )
 
 const (
-	divisor = len(status_strings) + 1
-	pad     = 2
+	divisor       = len(status_strings) + 1
+	horizontalPad = 2
+	verticalPad   = 1
+	bordersize    = 1
 )
 
 // Styles
 var (
 	columnStyle = lipgloss.NewStyle().
-			Padding(1, pad)
+			Padding(verticalPad, horizontalPad)
 	focusedStyle = lipgloss.NewStyle().
-			Padding(1, pad).
+			Padding(verticalPad, horizontalPad).
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("62"))
 )
@@ -35,6 +37,18 @@ func (s *SwimLane) Focus() {
 
 func (s *SwimLane) Blur() {
 	s.focused = false
+}
+
+// w should be the available width of the current view port (minus other UI)
+func (s *SwimLane) SetWidth(w int) {
+	hOffset := (horizontalPad * 2) + (bordersize * 2)
+	s.list.SetHeight(w - hOffset)
+}
+
+// h should be the available height of the current view port (minus other UI)
+func (s *SwimLane) SetHeight(h int) {
+	vOffset := (verticalPad * 2) + (bordersize * 2)
+	s.list.SetHeight(h - vOffset)
 }
 
 // This will create a new list, meant to be rendered next to N number of other lists,
@@ -56,7 +70,10 @@ func (s *SwimLane) Init(width int, height int, status status) SwimLane {
 		items = append(items, task)
 	}
 
-	s.list = list.New([]list.Item{}, list.NewDefaultDelegate(), width/divisor, (height-(pad*2))/2)
+	vOffset := (verticalPad * 2) + (bordersize * 2)
+	hOffset := (horizontalPad * 2) + (bordersize * 2)
+
+	s.list = list.New([]list.Item{}, list.NewDefaultDelegate(), width-hOffset, height-vOffset)
 	s.list.Title = title
 	s.list.SetItems(items)
 	s.list.SetShowHelp(false)

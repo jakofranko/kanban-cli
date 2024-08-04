@@ -28,11 +28,19 @@ type Board struct {
 	project  string
 	help     help.Model
 	keys     boardKeyMap
+	height   int
+	width    int
 }
 
 type UpdateListMsg struct {
 	update   status
 	newBoard Board
+}
+
+type ResetListHeightMsg struct{}
+
+func resetListHeight() tea.Msg {
+	return &ResetListHeightMsg{}
 }
 
 func NewBoard() *Board {
@@ -137,10 +145,17 @@ func (m *Board) initLists(width, height int) {
 	doneLane := new(SwimLane)
 
 	m.lanes = []SwimLane{
-		todoLane.Init(width, height, todo),
-		inProgressLane.Init(width, height, inProgress),
-		doneLane.Init(width, height, done),
+		todoLane.Init(width, m.getListHeight(height), todo),
+		inProgressLane.Init(width, m.getListHeight(height), inProgress),
+		doneLane.Init(width, m.getListHeight(height), done),
 	}
+}
+
+// This will return a height minus the height of other UI elements
+func (m *Board) getListHeight(height int) int {
+	// This can be expanded later if additional UI elements are
+	// added to the Board view
+	return height - lipgloss.Height(m.help.View(boardKeys))
 }
 
 func (m Board) Init() tea.Cmd {
@@ -154,10 +169,8 @@ func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		if !m.loaded {
-			columnStyle.Width(msg.Width / divisor)
-			focusedStyle.Width(msg.Width / divisor)
-			columnStyle.Height(msg.Height - divisor)
-			focusedStyle.Height(msg.Height - divisor)
+			m.width = msg.Width
+			m.height = msg.Height
 			m.initLists(msg.Width, msg.Height)
 			m.loaded = true
 			m.focused = todo
@@ -169,14 +182,38 @@ func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.quitting = true
 			return m, tea.Quit
 		case key.Matches(msg, m.keys.Left):
-			m.Prev()
+			l := m.lanes[m.focused].list
+			p := l.Paginator
+			if p.TotalPages > 1 && !p.OnFirstPage() {
+				m.lanes[m.focused].list.Paginator.PrevPage()
+			} else {
+				m.Prev()
+			}
 		case key.Matches(msg, m.keys.Right):
-			m.Next()
+			l := m.lanes[m.focused].list
+			p := l.Paginator
+			if p.TotalPages > 1 && !p.OnLastPage() {
+				m.lanes[m.focused].list.Paginator.NextPage()
+			} else {
+				m.Next()
+			}
 		case key.Matches(msg, m.keys.Move):
 			return m, m.MoveToNext
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
-			return m, nil
+			model, _ := m.help.Update(nil)
+			m.help = model
+
+			// Update lanes
+			var cmds []tea.Cmd
+			for i, lane := range m.lanes {
+				lane.SetHeight(m.getListHeight(m.height))
+				_, cmd := lane.list.Update(nil)
+				m.lanes[i] = lane
+				cmds = append(cmds, cmd)
+			}
+
+			return m, tea.Batch(cmds...)
 		case key.Matches(msg, m.keys.New):
 			models[board] = m // save current model
 			models[form] = NewForm(m.focused, m.project)

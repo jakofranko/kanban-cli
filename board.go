@@ -6,6 +6,7 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -13,28 +14,35 @@ import (
 // Styles
 var (
 	helpStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("241"))
+			Foreground(lipgloss.Color("241"))
+	progressStyle = lipgloss.NewStyle().
+			Margin(1)
 )
 
 // This is the model for the board view, which will implement the
 // Bubbletea model methods for rendering etc. It maintains multiple
 // lists components from bubbles, and is styled via lipgloss.
 type Board struct {
-	focused  status
-	lanes    []SwimLane
-	err      error
-	loaded   bool
-	quitting bool
-	project  string
-	help     help.Model
-	keys     boardKeyMap
-	height   int
-	width    int
+	focused        status
+	lanes          []SwimLane
+	err            error
+	loaded         bool
+	quitting       bool
+	project        string
+	help           help.Model
+	keys           boardKeyMap
+	height         int
+	width          int
+	progress       progress.Model
+	totalTasks     int
+	completedTasks int
 }
 
 type UpdateListMsg struct {
-	update   status
-	newBoard Board
+	update         status
+	newBoard       Board
+	totalTasks     int
+	completedTasks int
 }
 
 type ResetListHeightMsg struct{}
@@ -45,8 +53,9 @@ func resetListHeight() tea.Msg {
 
 func NewBoard() *Board {
 	return &Board{
-		keys: boardKeys,
-		help: help.New(),
+		keys:     boardKeys,
+		help:     help.New(),
+		progress: progress.New(progress.WithScaledGradient("#FF7CCB", "#FDFF8C")),
 	}
 }
 
@@ -108,9 +117,19 @@ func (m *Board) MoveToNext() tea.Msg {
 		taskDB := GetDB()
 		defer taskDB.db.Close()
 
+		// Before we change the status, handle changing the completed tasks
+		if oldStatus == done {
+			m.completedTasks--
+		}
+
 		updatedTask, err := taskDB.NextStatus(selectedTask)
 		if err != nil {
 			log.Fatal(err)
+		}
+
+		// Adjust completed tasks
+		if updatedTask.Status == done {
+			m.completedTasks++
 		}
 
 		selectedTask = updatedTask
@@ -133,7 +152,8 @@ func (m *Board) MoveToNext() tea.Msg {
 		// Update target list. The current list will get updated on the next
 		// Update tick in the main Board.
 		m.lanes[selectedTask.Status].list.Update(nil)
-		return UpdateListMsg{update: oldStatus}
+
+		return UpdateListMsg{update: oldStatus, completedTasks: m.completedTasks}
 	}
 
 	return nil
@@ -149,13 +169,25 @@ func (m *Board) initLists(width, height int) {
 		inProgressLane.Init(width, m.getListHeight(height), inProgress),
 		doneLane.Init(width, m.getListHeight(height), done),
 	}
+
+	m.totalTasks = 0
+	for _, lane := range m.lanes {
+		m.totalTasks += len(lane.list.Items())
+
+		if lane.laneStatus == done {
+			m.completedTasks = len(lane.list.Items())
+		}
+	}
 }
 
 // This will return a height minus the height of other UI elements
 func (m *Board) getListHeight(height int) int {
 	// This can be expanded later if additional UI elements are
 	// added to the Board view
-	return height - lipgloss.Height(m.help.View(boardKeys))
+	helpHeight := lipgloss.Height(m.help.View(boardKeys))
+	progressHeight := lipgloss.Height(m.progress.ViewAs(0.0))
+	progressMargin := 1
+	return height - helpHeight - progressHeight - progressMargin*2
 }
 
 func (m Board) Init() tea.Cmd {
@@ -175,6 +207,7 @@ func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.loaded = true
 			m.focused = todo
 			m.lanes[m.focused].Focus()
+			m.progress.Width = (msg.Width / 2) - horizontalPad*2
 		}
 	case tea.KeyMsg:
 		switch {
@@ -241,10 +274,21 @@ func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			task := currentList.list.SelectedItem().(Task)
 
 			taskDB.Delete(task.Id)
+
+			m.totalTasks--
+			if task.Status == done {
+				m.completedTasks--
+			}
+
 			return m, nil
 		}
 	case CreateTaskMsg:
 		task := msg.task
+
+		m.totalTasks++
+		if task.Status == done {
+			m.completedTasks++
+		}
 
 		// Insert into list
 		return m, m.lanes[task.Status].list.InsertItem(len(m.lanes[task.Status].list.Items()), task)
@@ -257,6 +301,7 @@ func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case UpdateListMsg:
 		listToUpdate := msg.update
 		m.lanes[listToUpdate].list.Update(nil)
+		m.completedTasks = msg.completedTasks
 
 		return m, nil
 	}
@@ -284,7 +329,12 @@ func (m Board) View() string {
 			doneView,
 		)
 
-		return lipgloss.JoinVertical(lipgloss.Center, listsView, m.help.View(m.keys))
+		return lipgloss.JoinVertical(
+			lipgloss.Center,
+			listsView,
+			helpStyle.Render(m.help.View(m.keys)),
+			progressStyle.Render(m.progress.ViewAs(float64(m.completedTasks)/float64(m.totalTasks))),
+		)
 	} else {
 		return "loading..."
 	}

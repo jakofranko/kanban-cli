@@ -26,9 +26,10 @@ var (
 )
 
 type SwimLane struct {
-	title   string
-	focused bool
-	list    list.Model
+	title      string
+	focused    bool
+	list       list.Model
+	laneStatus status
 }
 
 func (s *SwimLane) Focus() {
@@ -54,6 +55,8 @@ func (s *SwimLane) SetHeight(h int) {
 // This will create a new list, meant to be rendered next to N number of other lists,
 // where N is equal to the number total lists. This number is passed in as a divisor.
 func (s *SwimLane) Init(width int, height int, status status) SwimLane {
+	s.laneStatus = status
+
 	title := stringy.New(status.String()).Title()
 	s.title = title
 

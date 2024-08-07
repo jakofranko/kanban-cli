@@ -55,7 +55,7 @@ func NewBoard() *Board {
 	return &Board{
 		keys:     boardKeys,
 		help:     help.New(),
-		progress: progress.New(progress.WithScaledGradient("#FF7CCB", "#FDFF8C")),
+		progress: progress.New(progress.WithScaledGradient("#FFF8E7", "#C0FFE3")),
 	}
 }
 

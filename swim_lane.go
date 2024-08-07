@@ -22,7 +22,18 @@ var (
 	focusedStyle = lipgloss.NewStyle().
 			Padding(verticalPad, horizontalPad).
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("62"))
+			BorderForeground(lipgloss.Color("#C0FFE3"))
+	listTitleStyle = lipgloss.NewStyle().
+			Background(lipgloss.Color("67")).
+			Foreground(lipgloss.Color("230")).
+			Padding(0, 1)
+	listFocusItemStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("84")).
+				Border(lipgloss.NormalBorder(), false, false, false, true).
+				BorderForeground(lipgloss.Color("84")).
+				Padding(0, 0, 0, 1)
+	listFocusItemDescStyle = listFocusItemStyle.Copy().
+				Foreground(lipgloss.Color("71"))
 )
 
 type SwimLane struct {
@@ -76,10 +87,17 @@ func (s *SwimLane) Init(width int, height int, status status) SwimLane {
 	vOffset := (verticalPad * 2) + (bordersize * 2)
 	hOffset := (horizontalPad * 2) + (bordersize * 2)
 
-	s.list = list.New([]list.Item{}, list.NewDefaultDelegate(), width-hOffset, height-vOffset)
+	d := list.NewDefaultDelegate()
+	d.Styles.SelectedTitle = listFocusItemStyle
+	d.Styles.SelectedDesc = listFocusItemDescStyle
+
+	s.list = list.New([]list.Item{}, d, width-hOffset, height-vOffset)
 	s.list.Title = title
 	s.list.SetItems(items)
 	s.list.SetShowHelp(false)
+
+	// Set styles
+	s.list.Styles.Title = listTitleStyle
 
 	return *s
 }

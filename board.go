@@ -263,23 +263,26 @@ func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// We could do a confirmation screen, but for now just delete.
 			// Another option would be to archive items that are in the done
 			// column. Maybe a feature for when I'm using persistant storage.
-			i := m.lanes[m.focused].list.Index()
-			m.lanes[m.focused].list.RemoveItem(i)
-
-			// And remove from DB
+			// Remove from DB
 			taskDB := GetDB()
 			defer taskDB.db.Close()
 
 			currentList := m.lanes[m.focused]
 			task := currentList.list.SelectedItem().(Task)
 
-			taskDB.Delete(task.Id)
+			err := taskDB.Delete(task.Id)
+			if err != nil {
+				log.Fatal(err)
+			}
 
 			m.totalTasks--
 			if task.Status == done {
 				m.completedTasks--
 			}
 
+			// And remove from UI
+			i := m.lanes[m.focused].list.Index()
+			m.lanes[m.focused].list.RemoveItem(i)
 			return m, nil
 		}
 	case CreateTaskMsg:

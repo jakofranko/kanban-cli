@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -24,6 +25,7 @@ type Form struct {
 	description textarea.Model
 	project     string
 	id          int // DB id of task
+	help        help.Model
 }
 
 func NewTitle() textinput.Model {
@@ -47,7 +49,7 @@ func NewDescription() textarea.Model {
 }
 
 func NewForm(focused status, project string) *Form {
-	form := &Form{focused: focused}
+	form := &Form{focused: focused, help: help.New()}
 	form.title = NewTitle()
 	form.description = NewDescription()
 	form.editing = false
@@ -114,7 +116,12 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Form) View() string {
-	return lipgloss.JoinVertical(lipgloss.Left, TitleView(m.title), DescView(m.description))
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		TitleView(m.title),
+		DescView(m.description),
+		m.help.View(formKeys),
+	)
 }
 
 func (m Form) CreateTask() tea.Msg {

@@ -98,7 +98,7 @@ var formKeys = formKeyMap{
 		key.WithHelp("ctrl+y", "next field/confirm"),
 	),
 	Quit: key.NewBinding(
-		key.WithKeys("q", "esc", "ctrl+c"),
-		key.WithHelp("q", "quit"),
+		key.WithKeys("ctrl+c"),
+		key.WithHelp("ctrl+c", "quit"),
 	),
 }

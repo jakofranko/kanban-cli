@@ -14,6 +14,7 @@ var models []tea.Model
 const (
 	board status = iota
 	form
+	projects
 )
 
 func main() {
@@ -29,8 +30,8 @@ func main() {
 	log.Println("Starting Cli...")
 
 	// TODO confirm that the new form project here doesn't matter?
-	models = []tea.Model{NewBoard(), NewForm(todo, "not real")}
-	m := models[board]
+	models = []tea.Model{NewBoard(), NewForm(todo, "not real"), NewProjectsTable()}
+	m := models[projects]
 	p := tea.NewProgram(m)
 
 	if _, err := p.Run(); err != nil {

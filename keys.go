@@ -22,6 +22,17 @@ type formKeyMap struct {
 	Quit key.Binding
 }
 
+type projectListKeyMap struct {
+	Up       key.Binding
+	Down     key.Binding
+	New      key.Binding
+	Archive  key.Binding
+	MoveUp   key.Binding
+	MoveDown key.Binding
+	Quit     key.Binding
+	Help     key.Binding
+}
+
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
 // of the key.Map interface.
 func (k boardKeyMap) ShortHelp() []key.Binding {
@@ -46,6 +57,19 @@ func (k formKeyMap) ShortHelp() []key.Binding {
 func (k formKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Next, k.Quit},
+	}
+}
+
+func (k projectListKeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Up, k.Down, k.New, k.Help}
+}
+
+// FullHelp returns keybindings for the expanded help view. It's part of the
+// key.Map interface.
+func (k projectListKeyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.Up, k.Down, k.MoveUp, k.MoveDown},
+		{k.New, k.Archive, k.Help, k.Quit},
 	}
 }
 
@@ -100,5 +124,40 @@ var formKeys = formKeyMap{
 	Quit: key.NewBinding(
 		key.WithKeys("ctrl+c"),
 		key.WithHelp("ctrl+c", "quit"),
+	),
+}
+
+var projectListKeys = projectListKeyMap{
+	Up: key.NewBinding(
+		key.WithKeys("up", "k"),
+		key.WithHelp("↑/k", "move up"),
+	),
+	Down: key.NewBinding(
+		key.WithKeys("down", "j"),
+		key.WithHelp("↓/j", "move down"),
+	),
+	MoveUp: key.NewBinding(
+		key.WithKeys("ctrl+up", "ctrl+k"),
+		key.WithHelp("ctrl+ ↑/k", "move project up"),
+	),
+	MoveDown: key.NewBinding(
+		key.WithKeys("ctrl+down", "ctrl+j"),
+		key.WithHelp("ctrl+ ↓/j", "move project down"),
+	),
+	Help: key.NewBinding(
+		key.WithKeys("?"),
+		key.WithHelp("?", "toggle help"),
+	),
+	New: key.NewBinding(
+		key.WithKeys("n"),
+		key.WithHelp("n", "new task"),
+	),
+	Archive: key.NewBinding(
+		key.WithKeys("a"),
+		key.WithHelp("a", "archive project"),
+	),
+	Quit: key.NewBinding(
+		key.WithKeys("q", "esc", "ctrl+c"),
+		key.WithHelp("q", "quit"),
 	),
 }

@@ -267,3 +267,51 @@ func (t *TaskDB) GetByStatus(status status) ([]Task, error) {
 
 	return tasks, err
 }
+
+func (t *TaskDB) GetUniqueProjectNames() ([]string, error) {
+	var projects []string
+
+	rows, err := t.db.Query("SELECT DISTINCT project FROM tasks")
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var project string
+		err = rows.Scan(&project)
+		if err != nil {
+			return nil, err
+		}
+
+		projects = append(projects, project)
+	}
+
+	return projects, err
+}
+
+type ProjectTasksByStatusRow struct {
+	status status
+	id     int
+	count  int
+}
+
+func (t *TaskDB) GetProjectTasksByStatus(projectName string) ([]ProjectTasksByStatusRow, error) {
+	rows, err := t.db.Query("SELECT status, id, COUNT(id) FROM tasks WHERE project = ? GROUP BY status", projectName)
+	if err != nil {
+		return nil, err
+	}
+
+	var tasks []ProjectTasksByStatusRow
+	for rows.Next() {
+		var task ProjectTasksByStatusRow
+		err = rows.Scan(
+			&task.status,
+			&task.id,
+			&task.count,
+		)
+
+		tasks = append(tasks, task)
+	}
+
+	return tasks, nil
+}

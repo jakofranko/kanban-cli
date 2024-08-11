@@ -24,6 +24,10 @@ type ProjectsTable struct {
 	table    table.Model
 	keys     projectListKeyMap
 	help     help.Model
+
+	// Store these if this is the first view, and pass to subsequent models
+	width  int
+	height int
 }
 
 func (p *ProjectsTable) Init() tea.Cmd {
@@ -32,6 +36,9 @@ func (p *ProjectsTable) Init() tea.Cmd {
 
 func (p *ProjectsTable) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		p.height = msg.Height
+		p.width = msg.Width
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, p.keys.Quit):
@@ -46,6 +53,14 @@ func (p *ProjectsTable) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				p.table.Focus()
 			}
 			p.table.MoveDown(1)
+		case key.Matches(msg, p.keys.Select):
+			row := p.table.SelectedRow()
+
+			// Get a new kanban board for this project
+			b := NewBoard(row[0], p.width, p.height)
+			models[projects] = p
+			models[board] = b
+			return models[board], nil
 		}
 	}
 	return p, nil

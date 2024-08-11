@@ -51,12 +51,21 @@ func resetListHeight() tea.Msg {
 	return &ResetListHeightMsg{}
 }
 
-func NewBoard() *Board {
-	return &Board{
+func NewBoard(project string, width int, height int) *Board {
+	b := &Board{
+		project:  project,
 		keys:     boardKeys,
 		help:     help.New(),
 		progress: progress.New(progress.WithScaledGradient("#FFF8E7", "#C0FFE3")),
+		width:    width,
+		height:   height,
+		focused:  todo,
+		loaded:   true,
 	}
+
+	b.initLists(width, height)
+
+	return b
 }
 
 func (m *Board) Next() {
@@ -165,9 +174,9 @@ func (m *Board) initLists(width, height int) {
 	doneLane := new(SwimLane)
 
 	m.lanes = []SwimLane{
-		todoLane.Init(width, m.getListHeight(height), todo),
-		inProgressLane.Init(width, m.getListHeight(height), inProgress),
-		doneLane.Init(width, m.getListHeight(height), done),
+		todoLane.Init(width, m.getListHeight(height), m.project, todo),
+		inProgressLane.Init(width, m.getListHeight(height), m.project, inProgress),
+		doneLane.Init(width, m.getListHeight(height), m.project, done),
 	}
 
 	m.totalTasks = 0
@@ -191,24 +200,19 @@ func (m *Board) getListHeight(height int) int {
 }
 
 func (m Board) Init() tea.Cmd {
-	// TODO set project when initializing a new board
-	// from a as of yet non-existent project view
-	m.project = "test project"
+	// I don't understand what Init is for
+	log.Print("initing board")
 	return nil
 }
 
 func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		if !m.loaded {
-			m.width = msg.Width
-			m.height = msg.Height
-			m.initLists(msg.Width, msg.Height)
-			m.loaded = true
-			m.focused = todo
-			m.lanes[m.focused].Focus()
-			m.progress.Width = (msg.Width / 2) - horizontalPad*2
-		}
+		m.width = msg.Width
+		m.height = msg.Height
+		m.initLists(msg.Width, msg.Height)
+		m.lanes[m.focused].Focus()
+		m.progress.Width = (msg.Width / 2) - horizontalPad*2
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keys.Quit):

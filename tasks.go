@@ -241,10 +241,10 @@ func (t *TaskDB) GetAll() ([]Task, error) {
 	return tasks, err
 }
 
-func (t *TaskDB) GetByStatus(status status) ([]Task, error) {
+func (t *TaskDB) GetByStatus(status status, project string) ([]Task, error) {
 	var tasks []Task
 
-	rows, err := t.db.Query("SELECT * FROM tasks WHERE status = ?", status)
+	rows, err := t.db.Query("SELECT * FROM tasks WHERE status = ? AND project = ?", status, project)
 	if err != nil {
 		return nil, err
 	}

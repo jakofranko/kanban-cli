@@ -65,7 +65,7 @@ func (s *SwimLane) SetHeight(h int) {
 
 // This will create a new list, meant to be rendered next to N number of other lists,
 // where N is equal to the number total lists. This number is passed in as a divisor.
-func (s *SwimLane) Init(width int, height int, status status) SwimLane {
+func (s *SwimLane) Init(width int, height int, project string, status status) SwimLane {
 	s.laneStatus = status
 
 	title := stringy.New(status.String()).Title()
@@ -74,7 +74,7 @@ func (s *SwimLane) Init(width int, height int, status status) SwimLane {
 	// Fetch items from the DB
 	taskDB := GetDB()
 	defer taskDB.db.Close()
-	tasks, err := taskDB.GetByStatus(status)
+	tasks, err := taskDB.GetByStatus(status, project)
 	if err != nil {
 		log.Fatal(err)
 	}

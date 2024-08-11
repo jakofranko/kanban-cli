@@ -31,6 +31,7 @@ type projectListKeyMap struct {
 	MoveDown key.Binding
 	Quit     key.Binding
 	Help     key.Binding
+	Select   key.Binding
 }
 
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
@@ -61,7 +62,7 @@ func (k formKeyMap) FullHelp() [][]key.Binding {
 }
 
 func (k projectListKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Up, k.Down, k.New, k.Help}
+	return []key.Binding{k.Up, k.Down, k.Select, k.Help}
 }
 
 // FullHelp returns keybindings for the expanded help view. It's part of the
@@ -69,7 +70,8 @@ func (k projectListKeyMap) ShortHelp() []key.Binding {
 func (k projectListKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down, k.MoveUp, k.MoveDown},
-		{k.New, k.Archive, k.Help, k.Quit},
+		{k.Select, k.New, k.Archive},
+		{k.Help, k.Quit},
 	}
 }
 
@@ -159,5 +161,9 @@ var projectListKeys = projectListKeyMap{
 	Quit: key.NewBinding(
 		key.WithKeys("q", "esc", "ctrl+c"),
 		key.WithHelp("q", "quit"),
+	),
+	Select: key.NewBinding(
+		key.WithKeys("enter", "space"),
+		key.WithHelp("enter/spack", "select project"),
 	),
 }

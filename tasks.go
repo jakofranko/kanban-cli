@@ -315,3 +315,9 @@ func (t *TaskDB) GetProjectTasksByStatus(projectName string) ([]ProjectTasksBySt
 
 	return tasks, nil
 }
+
+func (t *TaskDB) AddNewProject(projectName string) error {
+	_, err := t.db.Exec("INSERT INTO tasks (name, info, status, project) VALUES('A new beginning', '', 0, ?)", projectName)
+
+	return err
+}

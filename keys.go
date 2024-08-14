@@ -5,16 +5,17 @@ import (
 )
 
 type boardKeyMap struct {
-	Up     key.Binding
-	Down   key.Binding
-	Left   key.Binding
-	Right  key.Binding
-	Help   key.Binding
-	Edit   key.Binding
-	New    key.Binding
-	Move   key.Binding
-	Delete key.Binding
-	Quit   key.Binding
+	Up       key.Binding
+	Down     key.Binding
+	Left     key.Binding
+	Right    key.Binding
+	Help     key.Binding
+	Edit     key.Binding
+	New      key.Binding
+	Move     key.Binding
+	Delete   key.Binding
+	Projects key.Binding
+	Quit     key.Binding
 }
 
 type formKeyMap struct {
@@ -37,15 +38,16 @@ type projectListKeyMap struct {
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
 // of the key.Map interface.
 func (k boardKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.New, k.Quit, k.Help}
+	return []key.Binding{k.New, k.Projects, k.Quit, k.Help}
 }
 
 // FullHelp returns keybindings for the expanded help view. It's part of the
 // key.Map interface.
 func (k boardKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down, k.Left, k.Right},           // first column
-		{k.New, k.Edit, k.Delete, k.Quit, k.Help}, // second column
+		{k.Up, k.Down, k.Left, k.Right}, // first column
+		{k.New, k.Edit, k.Delete},       // second column
+		{k.Projects, k.Quit, k.Help},    // third column
 	}
 }
 
@@ -112,6 +114,10 @@ var boardKeys = boardKeyMap{
 		key.WithKeys("d"),
 		key.WithHelp("d", "delete task"),
 	),
+	Projects: key.NewBinding(
+		key.WithKeys("p"),
+		key.WithHelp("p", "projects"),
+	),
 	Quit: key.NewBinding(
 		key.WithKeys("q", "esc", "ctrl+c"),
 		key.WithHelp("q", "quit"),
@@ -152,7 +158,7 @@ var projectListKeys = projectListKeyMap{
 	),
 	New: key.NewBinding(
 		key.WithKeys("n"),
-		key.WithHelp("n", "new task"),
+		key.WithHelp("n", "new project"),
 	),
 	Archive: key.NewBinding(
 		key.WithKeys("a"),
@@ -164,6 +170,6 @@ var projectListKeys = projectListKeyMap{
 	),
 	Select: key.NewBinding(
 		key.WithKeys("enter", "space"),
-		key.WithHelp("enter/spack", "select project"),
+		key.WithHelp("enter/space", "select project"),
 	),
 }

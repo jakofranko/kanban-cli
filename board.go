@@ -288,6 +288,9 @@ func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			i := m.lanes[m.focused].list.Index()
 			m.lanes[m.focused].list.RemoveItem(i)
 			return m, nil
+		case key.Matches(msg, m.keys.Projects):
+			// Back to the projects view
+			return models[projects], nil
 		}
 	case CreateTaskMsg:
 		task := msg.task

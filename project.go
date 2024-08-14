@@ -16,6 +16,11 @@ import (
 var tableStyle = lipgloss.NewStyle().
 	Margin(2, 1)
 
+var newProjectStyle = lipgloss.NewStyle().
+	Padding(1, 2).
+	Border(lipgloss.RoundedBorder(), true).
+	BorderForeground(lipgloss.Color("#C0FF3E"))
+
 type Project struct {
 	name      string
 	todoTasks []Task
@@ -207,7 +212,7 @@ func (f *NewProject) Init() tea.Cmd {
 }
 
 func (f *NewProject) View() string {
-	return f.model.View()
+	return newProjectStyle.Render(f.model.View())
 }
 
 func (f *NewProject) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -216,7 +221,7 @@ func (f *NewProject) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
-			return nil, tea.Quit
+			return f, tea.Quit
 		case "enter":
 			// Create new project in DB
 			taskDB := GetDB()

@@ -65,6 +65,9 @@ func NewBoard(project string, width int, height int) *Board {
 
 	b.initLists(width, height)
 
+	// Focus the todo lane
+	b.lanes[todo].Focus()
+
 	return b
 }
 

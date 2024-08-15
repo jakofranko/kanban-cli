@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -130,7 +132,20 @@ func (m Form) CreateTask() tea.Msg {
 	// Insert task into db
 	taskDB := GetDB()
 	defer taskDB.db.Close()
-	taskDB.Insert(task.Name, task.Info, task.Project, task.Status)
+	newTask, err := taskDB.Insert(task.Name, task.Info, task.Project, task.Status)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Assign the new ID to the new task, so it can be actioned
+	// in the board without taking a large poopoo.
+	var newId int64
+	newId, err = newTask.LastInsertId()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	task.Id = int(newId)
 
 	// Return create task message
 	return CreateTaskMsg{task: task}

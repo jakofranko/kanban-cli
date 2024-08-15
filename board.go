@@ -182,6 +182,7 @@ func (m *Board) initLists(width, height int) {
 		doneLane.Init(width, m.getListHeight(height), m.project, done),
 	}
 
+	// Count total and completed tasks for the progress bar.
 	m.totalTasks = 0
 	for _, lane := range m.lanes {
 		m.totalTasks += len(lane.list.Items())

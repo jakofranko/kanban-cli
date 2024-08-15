@@ -142,8 +142,8 @@ func (t *TaskDB) CreateTable() error {
 	return err
 }
 
-func (t *TaskDB) Insert(name, info, project string, status status) error {
-	_, err := t.db.Exec(
+func (t *TaskDB) Insert(name, info, project string, status status) (sql.Result, error) {
+	result, err := t.db.Exec(
 		"INSERT INTO tasks (name, info, status, project) VALUES(?, ?, ?, ?)",
 		name,
 		info,
@@ -151,7 +151,7 @@ func (t *TaskDB) Insert(name, info, project string, status status) error {
 		project,
 	)
 
-	return err
+	return result, err
 }
 
 func (t *TaskDB) Delete(id int) error {

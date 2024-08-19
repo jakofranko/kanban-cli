@@ -22,7 +22,10 @@ var newProjectStyle = lipgloss.NewStyle().
 	BorderForeground(lipgloss.Color("#C0FF3E"))
 
 type Project struct {
+	id        int
 	name      string
+	order     int
+	status    projectStatus
 	todoTasks []Task
 	ipTasks   []Task
 	doneTasks []Task
@@ -71,7 +74,14 @@ func (p *ProjectsTable) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			row := p.table.SelectedRow()
 
 			// Get a new kanban board for this project
-			b := NewBoard(row[0], p.width, p.height)
+			log.Println(row, row[0])
+			pId, err := strconv.Atoi(row[0])
+			if err != nil {
+				log.Fatal(err)
+				return nil, nil
+			}
+
+			b := NewBoard(pId, p.width, p.height)
 			models[projects] = p
 			models[board] = b
 			return models[board], nil
@@ -107,35 +117,41 @@ func (p *ProjectsTable) setViewSize(height int) {
 }
 
 func buildTable() ([]table.Column, []table.Row) {
-	// Fetch unique project names from the TaskDB
-	taskDB := GetDB()
-	defer taskDB.db.Close()
-	projectNames, err := taskDB.GetUniqueProjectNames()
+	projectDB := GetProjectDB()
+	defer projectDB.db.Close()
+
+	// Get all projects from project db
+	projects, err := projectDB.GetAll()
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Print(projects)
 
 	// The column should be at least as wide as the column title
 	const projectTitle = "Project Name"
 	var longestProjectName int
 	longestProjectName = len(projectTitle)
 
+	taskDB := GetDB()
+	defer taskDB.db.Close()
+
 	var rows []table.Row
 
-	for _, pn := range projectNames {
+	for _, p := range projects {
 		flpn := float64(longestProjectName)
-		fpn := float64(len(pn))
+		fpn := float64(len(p.name))
 		lpn := math.Max(flpn, fpn)
 		longestProjectName = int(lpn)
 
-		tasks, err := taskDB.GetProjectTasksByStatus(pn)
+		tasks, err := taskDB.GetProjectTasksByStatus(p.id)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		// build the row
 		var row table.Row
-		row = append(row, pn)
+		row = append(row, strconv.Itoa(p.id), p.name)
 
 		// Add the tasks to the appropriate columns
 		statuses := [3]string{"0", "0", "0"}
@@ -149,6 +165,7 @@ func buildTable() ([]table.Column, []table.Row) {
 	}
 
 	columns := []table.Column{
+		{Title: "ID", Width: 2},
 		{Title: projectTitle, Width: longestProjectName},
 		{Title: "Todo", Width: 4},
 		{Title: "In Progress", Width: 11},
@@ -223,13 +240,14 @@ func (f *NewProject) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return f, tea.Quit
 		case "enter":
-			// Create new project in DB
-			taskDB := GetDB()
-			defer taskDB.db.Close()
+			projectDB := GetProjectDB()
+			defer projectDB.db.Close()
 
-			err := taskDB.AddNewProject(f.model.Value())
+			result, err := projectDB.Insert(f.model.Value())
 			if err != nil {
 				log.Fatal(err)
+			} else {
+				log.Print(result.LastInsertId())
 			}
 
 			return models[projects], f.RefreshProjects

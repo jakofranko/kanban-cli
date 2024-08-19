@@ -25,7 +25,7 @@ type Form struct {
 	index       int // Index within current list
 	title       textinput.Model
 	description textarea.Model
-	project     string
+	project     int
 	id          int // DB id of task
 	help        help.Model
 }
@@ -50,7 +50,7 @@ func NewDescription() textarea.Model {
 	return ta
 }
 
-func NewForm(focused status, project string) *Form {
+func NewForm(focused status, project int) *Form {
 	form := &Form{focused: focused, help: help.New()}
 	form.title = NewTitle()
 	form.description = NewDescription()
@@ -71,7 +71,7 @@ func UpdateForm(task Task, index int) *Form {
 	form.title.SetValue(task.Name)
 	form.description.SetValue(task.Info)
 	form.id = task.Id
-	form.project = task.Project
+	form.project = task.ProjectId
 
 	form.title.Focus()
 	return form
@@ -132,7 +132,7 @@ func (m Form) CreateTask() tea.Msg {
 	// Insert task into db
 	taskDB := GetDB()
 	defer taskDB.db.Close()
-	newTask, err := taskDB.Insert(task.Name, task.Info, task.Project, task.Status)
+	newTask, err := taskDB.Insert(task.Name, task.Info, task.ProjectId, task.Status)
 	if err != nil {
 		log.Fatal(err)
 	}

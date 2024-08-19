@@ -22,7 +22,27 @@ func GetDB() TaskDB {
 	t := TaskDB{db}
 
 	// This will create the table if it does not exist
-	t.CreateTable()
+	err = t.CreateTable()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return t
+}
+
+func GetProjectDB() ProjectDB {
+	db, err := sql.Open(dbDriver, dbName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	p := ProjectDB{db}
+
+	// This will create the table if it does not exist
+	err = p.CreateTable()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return p
 }

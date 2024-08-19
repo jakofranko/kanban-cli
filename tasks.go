@@ -20,6 +20,8 @@ const (
 
 var status_strings = [...]string{"todo", "in progress", "done"}
 
+const numStatus = len(status_strings)
+
 func (s status) String() string {
 	return status_strings[s]
 }
@@ -35,11 +37,11 @@ func GetStatusFromString(s string) (int, error) {
 }
 
 type Task struct {
-	Id      int
-	Name    string
-	Info    string
-	Status  status
-	Project string
+	Id        int
+	Name      string
+	Info      string
+	Status    status
+	ProjectId int
 }
 
 type CreateTaskMsg struct {
@@ -111,8 +113,8 @@ func (t *Task) Merge(newT Task) {
 	}
 }
 
-func NewTask(status status, name string, info string, id int, project string) Task {
-	return Task{Status: status, Name: name, Info: info, Id: id, Project: project}
+func NewTask(status status, name string, info string, id int, project int) Task {
+	return Task{Status: status, Name: name, Info: info, Id: id, ProjectId: project}
 }
 
 type TaskDB struct {
@@ -126,14 +128,15 @@ func (t *TaskDB) CreateTable() error {
 	// name
 	// info
 	// status
-	// project --> this is for a future project
+	// project_id --> references the id of a projects row
 	createStatement := `
     CREATE TABLE IF NOT EXISTS tasks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
         info TEXT,
         status INTEGER,
-        project TEXT
+        project_id INTEGER NOT NULL,
+        FOREIGN KEY (project_id) REFERENCES projects (id)
     )
     `
 
@@ -142,9 +145,9 @@ func (t *TaskDB) CreateTable() error {
 	return err
 }
 
-func (t *TaskDB) Insert(name, info, project string, status status) (sql.Result, error) {
+func (t *TaskDB) Insert(name, info string, project int, status status) (sql.Result, error) {
 	result, err := t.db.Exec(
-		"INSERT INTO tasks (name, info, status, project) VALUES(?, ?, ?, ?)",
+		"INSERT INTO tasks (name, info, status, project_id) VALUES(?, ?, ?, ?)",
 		name,
 		info,
 		status,
@@ -171,7 +174,7 @@ func (t *TaskDB) Get(id int) (Task, error) {
 			&task.Name,
 			&task.Info,
 			&task.Status,
-			&task.Project,
+			&task.ProjectId,
 		)
 
 	return task, err
@@ -189,11 +192,11 @@ func (t *TaskDB) Update(task Task) error {
 
 	// Perform the update
 	_, mErr := t.db.Exec(
-		"UPDATE tasks SET name = ?, info = ?, status = ?, project = ? WHERE id = ?",
+		"UPDATE tasks SET name = ?, info = ?, status = ?, project_id = ? WHERE id = ?",
 		curr.Name,
 		curr.Info,
 		curr.Status,
-		curr.Project,
+		curr.ProjectId,
 		curr.Id,
 	)
 
@@ -229,7 +232,7 @@ func (t *TaskDB) GetAll() ([]Task, error) {
 			&task.Name,
 			&task.Info,
 			&task.Status,
-			&task.Project,
+			&task.ProjectId,
 		)
 		if err != nil {
 			return nil, err
@@ -241,10 +244,10 @@ func (t *TaskDB) GetAll() ([]Task, error) {
 	return tasks, err
 }
 
-func (t *TaskDB) GetByStatus(status status, project string) ([]Task, error) {
+func (t *TaskDB) GetByStatus(status status, project int) ([]Task, error) {
 	var tasks []Task
 
-	rows, err := t.db.Query("SELECT * FROM tasks WHERE status = ? AND project = ?", status, project)
+	rows, err := t.db.Query("SELECT * FROM tasks WHERE status = ? AND project_id = ?", status, project)
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +259,7 @@ func (t *TaskDB) GetByStatus(status status, project string) ([]Task, error) {
 			&task.Name,
 			&task.Info,
 			&task.Status,
-			&task.Project,
+			&task.ProjectId,
 		)
 		if err != nil {
 			return nil, err
@@ -268,6 +271,7 @@ func (t *TaskDB) GetByStatus(status status, project string) ([]Task, error) {
 	return tasks, err
 }
 
+// Deprecated: use the new projects table instead
 func (t *TaskDB) GetUniqueProjectNames() ([]string, error) {
 	var projects []string
 
@@ -295,8 +299,8 @@ type ProjectTasksByStatusRow struct {
 	count  int
 }
 
-func (t *TaskDB) GetProjectTasksByStatus(projectName string) ([]ProjectTasksByStatusRow, error) {
-	rows, err := t.db.Query("SELECT status, id, COUNT(id) FROM tasks WHERE project = ? GROUP BY status", projectName)
+func (t *TaskDB) GetProjectTasksByStatus(projectId int) ([]ProjectTasksByStatusRow, error) {
+	rows, err := t.db.Query("SELECT status, id, COUNT(id) FROM tasks WHERE project_id = ? GROUP BY status", projectId)
 	if err != nil {
 		return nil, err
 	}
@@ -316,6 +320,7 @@ func (t *TaskDB) GetProjectTasksByStatus(projectName string) ([]ProjectTasksBySt
 	return tasks, nil
 }
 
+// Deprecated: use the new projects table
 func (t *TaskDB) AddNewProject(projectName string) error {
 	_, err := t.db.Exec("INSERT INTO tasks (name, info, status, project) VALUES('A new beginning', '', 0, ?)", projectName)
 

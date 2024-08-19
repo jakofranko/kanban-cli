@@ -28,7 +28,7 @@ type Board struct {
 	err            error
 	loaded         bool
 	quitting       bool
-	project        string
+	project        int
 	help           help.Model
 	keys           boardKeyMap
 	height         int
@@ -51,7 +51,7 @@ func resetListHeight() tea.Msg {
 	return &ResetListHeightMsg{}
 }
 
-func NewBoard(project string, width int, height int) *Board {
+func NewBoard(project int, width int, height int) *Board {
 	b := &Board{
 		project:  project,
 		keys:     boardKeys,

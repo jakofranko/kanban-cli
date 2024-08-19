@@ -65,7 +65,7 @@ func (s *SwimLane) SetHeight(h int) {
 
 // This will create a new list, meant to be rendered next to N number of other lists,
 // where N is equal to the number total lists. This number is passed in as a divisor.
-func (s *SwimLane) Init(width int, height int, project string, status status) SwimLane {
+func (s *SwimLane) Init(width int, height int, project int, status status) SwimLane {
 	s.laneStatus = status
 
 	title := stringy.New(status.String()).Title()
@@ -91,7 +91,7 @@ func (s *SwimLane) Init(width int, height int, project string, status status) Sw
 	d.Styles.SelectedTitle = listFocusItemStyle
 	d.Styles.SelectedDesc = listFocusItemDescStyle
 
-	s.list = list.New([]list.Item{}, d, width-hOffset, height-vOffset)
+	s.list = list.New([]list.Item{}, d, (width/numStatus)-hOffset, height-vOffset)
 	s.list.Title = title
 	s.list.SetItems(items)
 	s.list.SetShowHelp(false)

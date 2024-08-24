@@ -257,7 +257,7 @@ func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Batch(cmds...)
 		case key.Matches(msg, m.keys.New):
 			models[board] = m // save current model
-			models[form] = NewForm(m.focused, m.project)
+			models[form] = NewForm(m.width, m.height, m.focused, m.project)
 
 			return models[form], nil
 		case key.Matches(msg, m.keys.Edit):
@@ -294,7 +294,7 @@ func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case key.Matches(msg, m.keys.Projects):
 			// Back to the projects view
-			return models[projects], nil
+			return models[projects], m.RefreshProjects
 		}
 	case CreateTaskMsg:
 		task := msg.task
@@ -352,4 +352,8 @@ func (m Board) View() string {
 	} else {
 		return "loading..."
 	}
+}
+
+func (b *Board) RefreshProjects() tea.Msg {
+	return RefreshProjectsMsg{}
 }

@@ -21,6 +21,9 @@ var newProjectStyle = lipgloss.NewStyle().
 	Border(lipgloss.RoundedBorder(), true).
 	BorderForeground(lipgloss.Color("#C0FF3E"))
 
+var centerCtyle = lipgloss.NewStyle().
+	Align(lipgloss.Center)
+
 type Project struct {
 	id        int
 	name      string
@@ -74,7 +77,6 @@ func (p *ProjectsTable) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			row := p.table.SelectedRow()
 
 			// Get a new kanban board for this project
-			log.Println(row, row[0])
 			pId, err := strconv.Atoi(row[0])
 			if err != nil {
 				log.Fatal(err)
@@ -90,43 +92,77 @@ func (p *ProjectsTable) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			p.help.Update(nil)
 			p.setViewSize(p.height)
 		case key.Matches(msg, p.keys.New):
-			f := NewProjectForm()
+			f := NewProjectForm(p.width, p.height)
 			return f, nil
-			// TODO: MoveUp
-			// TODO: MoveDown
-			// TODO: Archive
+		case key.Matches(msg, p.keys.Archive):
+			i := p.table.Cursor()
+			if i >= 0 {
+				projectDB := GetProjectDB()
+				defer projectDB.db.Close()
+
+				row := p.table.SelectedRow()
+				pId, err := strconv.Atoi(row[0])
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				projectDB.ArchiveProject(pId)
+
+				// Remove row from this view
+				rows := p.table.Rows()
+				newRows := append(rows[:i], rows[i+1:]...)
+				p.table.SetRows(newRows)
+				p.table.SetCursor(i - 1)
+			}
+		case key.Matches(msg, p.keys.ViewArchived):
+			if p.view == open {
+				p.view = archived
+			} else {
+				p.view = open
+			}
+
+			columns, rows := buildTable(p.view)
+			p.table.SetColumns(columns)
+			p.table.SetRows(rows)
 		}
 	}
+
 	return p, nil
 }
 
 func (p *ProjectsTable) View() string {
-	t := tableStyle.Render(p.table.View())
-	h := helpStyle.Render(p.help.View(p.keys))
-	return lipgloss.JoinVertical(lipgloss.Left, t, h)
+	var heading string
+	if p.view == archived {
+		heading = "(Archived) Projects"
+	} else {
+		heading = "Projects"
+	}
+	he := centerCtyle.Width(p.width).Render(heading)
+	t := tableStyle.Width(p.width).Align(lipgloss.Center).Render(p.table.View())
+	h := helpStyle.Width(p.width).Align(lipgloss.Center).Render(p.help.View(p.keys))
+	return lipgloss.JoinVertical(lipgloss.Left, he, t, h)
 }
 
 func (p *ProjectsTable) setViewSize(height int) {
 	// Get all UI elements in view
 	h := lipgloss.Height(p.help.View(p.keys))
+	heading := 1
 
 	// There is a magic number of height added
 	// that is equal to the padding, margin, and border.
 	// I don't know a better way to pull this out progromatically.
-	p.table.SetHeight(height - h - 6)
+	p.table.SetHeight(height - h - heading - 6)
 }
 
-func buildTable() ([]table.Column, []table.Row) {
+func buildTable(s projectStatus) ([]table.Column, []table.Row) {
 	projectDB := GetProjectDB()
 	defer projectDB.db.Close()
 
 	// Get all projects from project db
-	projects, err := projectDB.GetAll()
+	projects, err := projectDB.GetByStatus(s)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	log.Print(projects)
 
 	// The column should be at least as wide as the column title
 	const projectTitle = "Project Name"
@@ -211,15 +247,17 @@ func NewProjectsTable() *ProjectsTable {
 }
 
 type NewProject struct {
-	model textinput.Model
-	name  string
+	model  textinput.Model
+	name   string
+	width  int
+	height int
 }
 
-func NewProjectForm() *NewProject {
+func NewProjectForm(width, height int) *NewProject {
 	t := textinput.New()
 	t.Placeholder = "Project Name"
 	t.Focus()
-	f := &NewProject{model: t}
+	f := &NewProject{model: t, width: width, height: height}
 
 	return f
 }
@@ -229,7 +267,8 @@ func (f *NewProject) Init() tea.Cmd {
 }
 
 func (f *NewProject) View() string {
-	return newProjectStyle.Render(f.model.View())
+	render := newProjectStyle.Render(f.model.View())
+	return lipgloss.Place(f.width, f.height, lipgloss.Center, lipgloss.Center, render)
 }
 
 func (f *NewProject) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -243,11 +282,9 @@ func (f *NewProject) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			projectDB := GetProjectDB()
 			defer projectDB.db.Close()
 
-			result, err := projectDB.Insert(f.model.Value())
+			_, err := projectDB.Insert(f.model.Value())
 			if err != nil {
 				log.Fatal(err)
-			} else {
-				log.Print(result.LastInsertId())
 			}
 
 			return models[projects], f.RefreshProjects

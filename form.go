@@ -14,7 +14,8 @@ import (
 var titleStyle = lipgloss.NewStyle().
 	Padding(1).
 	BorderStyle(lipgloss.RoundedBorder()).
-	BorderForeground(lipgloss.Color("33"))
+	BorderForeground(lipgloss.Color("33")).
+	Align(lipgloss.Center)
 
 var descStyle = titleStyle
 
@@ -28,6 +29,8 @@ type Form struct {
 	project     int
 	id          int // DB id of task
 	help        help.Model
+	width       int
+	height      int
 }
 
 func NewTitle() textinput.Model {
@@ -50,8 +53,8 @@ func NewDescription() textarea.Model {
 	return ta
 }
 
-func NewForm(focused status, project int) *Form {
-	form := &Form{focused: focused, help: help.New()}
+func NewForm(width, height int, focused status, project int) *Form {
+	form := &Form{width: width, height: height, focused: focused, help: help.New()}
 	form.title = NewTitle()
 	form.description = NewDescription()
 	form.editing = false
@@ -118,12 +121,14 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Form) View() string {
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
+	render := lipgloss.JoinVertical(
+		lipgloss.Center,
 		TitleView(m.title),
 		DescView(m.description),
 		m.help.View(formKeys),
 	)
+
+	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, render)
 }
 
 func (m Form) CreateTask() tea.Msg {

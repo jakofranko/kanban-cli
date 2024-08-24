@@ -30,7 +30,7 @@ func main() {
 	log.Println("Starting Cli...")
 
 	// TODO confirm that the new form project here doesn't matter?
-	models = []tea.Model{NewBoard(0, 0, 0), NewForm(todo, 0), NewProjectsTable()}
+	models = []tea.Model{NewBoard(0, 0, 0), NewForm(0, 0, todo, 0), NewProjectsTable()}
 	m := models[projects]
 	p := tea.NewProgram(m)
 

@@ -39,6 +39,7 @@ type ProjectsTable struct {
 	table    table.Model
 	keys     projectListKeyMap
 	help     help.Model
+	view     projectStatus
 
 	// Store these if this is the first view, and pass to subsequent models
 	width  int
@@ -56,7 +57,7 @@ func (p *ProjectsTable) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		p.width = msg.Width
 		p.setViewSize(msg.Height)
 	case RefreshProjectsMsg:
-		columns, rows := buildTable()
+		columns, rows := buildTable(p.view)
 		p.table.SetColumns(columns)
 		p.table.SetRows(rows)
 	case tea.KeyMsg:
@@ -212,7 +213,7 @@ func buildTable(s projectStatus) ([]table.Column, []table.Row) {
 }
 
 func NewProjectsTable() *ProjectsTable {
-	columns, rows := buildTable()
+	columns, rows := buildTable(open)
 
 	t := table.New(
 		table.WithColumns(columns),

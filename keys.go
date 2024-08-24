@@ -24,15 +24,14 @@ type formKeyMap struct {
 }
 
 type projectListKeyMap struct {
-	Up       key.Binding
-	Down     key.Binding
-	New      key.Binding
-	Archive  key.Binding
-	MoveUp   key.Binding
-	MoveDown key.Binding
-	Quit     key.Binding
-	Help     key.Binding
-	Select   key.Binding
+	Up           key.Binding
+	Down         key.Binding
+	New          key.Binding
+	Archive      key.Binding
+	ViewArchived key.Binding
+	Quit         key.Binding
+	Help         key.Binding
+	Select       key.Binding
 }
 
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
@@ -71,8 +70,8 @@ func (k projectListKeyMap) ShortHelp() []key.Binding {
 // key.Map interface.
 func (k projectListKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down, k.MoveUp, k.MoveDown},
-		{k.Select, k.New, k.Archive},
+		{k.Up, k.Down, k.Select},
+		{k.New, k.Archive, k.ViewArchived},
 		{k.Help, k.Quit},
 	}
 }
@@ -144,14 +143,6 @@ var projectListKeys = projectListKeyMap{
 		key.WithKeys("down", "j"),
 		key.WithHelp("↓/j", "move down"),
 	),
-	MoveUp: key.NewBinding(
-		key.WithKeys("ctrl+up", "ctrl+k"),
-		key.WithHelp("ctrl+ ↑/k", "move project up"),
-	),
-	MoveDown: key.NewBinding(
-		key.WithKeys("ctrl+down", "ctrl+j"),
-		key.WithHelp("ctrl+ ↓/j", "move project down"),
-	),
 	Help: key.NewBinding(
 		key.WithKeys("?"),
 		key.WithHelp("?", "toggle help"),
@@ -163,6 +154,10 @@ var projectListKeys = projectListKeyMap{
 	Archive: key.NewBinding(
 		key.WithKeys("a"),
 		key.WithHelp("a", "archive project"),
+	),
+	ViewArchived: key.NewBinding(
+		key.WithKeys("v"),
+		key.WithHelp("v", "view archived projects"),
 	),
 	Quit: key.NewBinding(
 		key.WithKeys("q", "esc", "ctrl+c"),

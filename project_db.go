@@ -59,6 +59,28 @@ func (p *ProjectDB) GetAll() ([]Project, error) {
 	return projects, nil
 }
 
+func (p *ProjectDB) GetByStatus(s projectStatus) ([]Project, error) {
+	rows, err := p.db.Query("SELECT * FROM projects WHERE status = ?", s)
+	if err != nil {
+		return nil, err
+	}
+
+	var projects []Project
+	for rows.Next() {
+		var project Project
+		rows.Scan(
+			&project.id,
+			&project.name,
+			&project.order,
+			&project.status,
+		)
+
+		projects = append(projects, project)
+	}
+
+	return projects, nil
+}
+
 func (p *ProjectDB) GetHighestOrder() (int, error) {
 	row := p.db.QueryRow("SELECT sort_order FROM projects ORDER BY sort_order DESC")
 

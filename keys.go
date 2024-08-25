@@ -20,6 +20,7 @@ type boardKeyMap struct {
 
 type formKeyMap struct {
 	Next key.Binding
+	Back key.Binding
 	Quit key.Binding
 }
 
@@ -51,14 +52,14 @@ func (k boardKeyMap) FullHelp() [][]key.Binding {
 }
 
 func (k formKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Next, k.Quit}
+	return []key.Binding{k.Next, k.Back, k.Quit}
 }
 
 // FullHelp returns keybindings for the expanded help view. It's part of the
 // key.Map interface.
 func (k formKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Next, k.Quit},
+		{k.Next, k.Back, k.Quit},
 	}
 }
 
@@ -127,6 +128,10 @@ var formKeys = formKeyMap{
 	Next: key.NewBinding(
 		key.WithKeys("ctrl+y"),
 		key.WithHelp("ctrl+y", "next field/confirm"),
+	),
+	Back: key.NewBinding(
+		key.WithKeys("ctrl+b"),
+		key.WithHelp("ctrl+b", "back"),
 	),
 	Quit: key.NewBinding(
 		key.WithKeys("ctrl+c"),

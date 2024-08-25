@@ -279,6 +279,8 @@ func (f *NewProject) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c":
 			return f, tea.Quit
+		case "ctrl+b":
+			return models[projects], nil
 		case "enter":
 			projectDB := GetProjectDB()
 			defer projectDB.db.Close()

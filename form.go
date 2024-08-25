@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -28,6 +29,7 @@ type Form struct {
 	description textarea.Model
 	project     int
 	id          int // DB id of task
+	keys        formKeyMap
 	help        help.Model
 	width       int
 	height      int
@@ -54,7 +56,7 @@ func NewDescription() textarea.Model {
 }
 
 func NewForm(width, height int, focused status, project int) *Form {
-	form := &Form{width: width, height: height, focused: focused, help: help.New()}
+	form := &Form{width: width, height: height, focused: focused, keys: formKeys, help: help.New()}
 	form.title = NewTitle()
 	form.description = NewDescription()
 	form.editing = false
@@ -65,7 +67,7 @@ func NewForm(width, height int, focused status, project int) *Form {
 }
 
 func UpdateForm(task Task, index int) *Form {
-	form := &Form{focused: task.Status}
+	form := &Form{focused: task.Status, keys: formKeys, help: help.New()}
 	form.title = NewTitle()
 	form.description = NewDescription()
 	form.editing = true
@@ -89,10 +91,10 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c":
+		switch {
+		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
-		case "ctrl+y":
+		case key.Matches(msg, m.keys.Next):
 			if m.title.Focused() {
 				m.title.Blur()
 				m.description.Focus()
@@ -106,6 +108,14 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 
 				return models[board], m.CreateTask
+			}
+		case key.Matches(msg, m.keys.Back):
+			if m.description.Focused() {
+				m.description.Blur()
+				m.title.Focus()
+				return m, textinput.Blink
+			} else {
+				return models[board], nil
 			}
 		}
 	}

@@ -138,6 +138,7 @@ func (p *ProjectsTable) View() string {
 	} else {
 		heading = "Projects"
 	}
+
 	he := centerCtyle.Width(p.width).Render(heading)
 	t := tableStyle.Width(p.width).Align(lipgloss.Center).Render(p.table.View())
 	h := helpStyle.Width(p.width).Align(lipgloss.Center).Render(p.help.View(p.keys))

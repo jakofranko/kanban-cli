@@ -3,8 +3,10 @@ package main
 import (
 	"database/sql"
 	"log"
+	"os"
 
 	_ "github.com/mattn/go-sqlite3"
+	gap "github.com/muesli/go-app-paths"
 )
 
 const (
@@ -12,8 +14,45 @@ const (
 	dbName   = "./kanbandb"
 )
 
+// Get or Setup XDG-compliant path for SQLite DB
+func getDbPath() string {
+	// Get XDG paths
+	scope := gap.NewScope(gap.User, "kanban")
+	dirs, err := scope.DataDirs()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create directory if it doesn't exist
+	var kanbanDir string
+	if len(dirs) > 0 {
+		kanbanDir = dirs[0]
+	} else {
+		kanbanDir, _ = os.UserHomeDir()
+	}
+
+	if err := initKanbanDir(kanbanDir); err != nil {
+		log.Fatal(err)
+	}
+
+	return kanbanDir
+}
+
+func initKanbanDir(path string) error {
+	if _, err := os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			return os.Mkdir(path, 0o770)
+		}
+
+		return err
+	}
+
+	return nil
+}
+
 func GetDB() TaskDB {
 	db, err := sql.Open(dbDriver, dbName)
+	// db, err := sql.Open(dbDriver, filepath.Join(getDbPath(), dbName))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,6 +71,7 @@ func GetDB() TaskDB {
 
 func GetProjectDB() ProjectDB {
 	db, err := sql.Open(dbDriver, dbName)
+	// db, err := sql.Open(dbDriver, filepath.Join(getDbPath(), dbName))
 	if err != nil {
 		log.Fatal(err)
 	}

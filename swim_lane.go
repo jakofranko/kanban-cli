@@ -22,18 +22,19 @@ var (
 	focusedStyle = lipgloss.NewStyle().
 			Padding(verticalPad, horizontalPad).
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#C0FFE3"))
+			BorderForeground(highlightColor)
 	listTitleStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("67")).
-			Foreground(lipgloss.Color("230")).
+			Background(grey).
+			Foreground(highlightColor).
 			Padding(0, 1)
 	listFocusItemStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("84")).
+				Foreground(highlightColor).
+				Bold(true).
 				Border(lipgloss.NormalBorder(), false, false, false, true).
-				BorderForeground(lipgloss.Color("84")).
+				BorderForeground(highlightColor).
 				Padding(0, 0, 0, 1)
 	listFocusItemDescStyle = listFocusItemStyle.Copy().
-				Foreground(lipgloss.Color("71"))
+				Foreground(highlightColor)
 )
 
 type SwimLane struct {

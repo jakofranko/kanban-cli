@@ -14,7 +14,7 @@ import (
 // Styles
 var (
 	helpStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("241"))
+			Foreground(grey)
 	progressStyle = lipgloss.NewStyle().
 			Margin(1)
 )
@@ -56,7 +56,7 @@ func NewBoard(project int, width int, height int) *Board {
 		project:  project,
 		keys:     boardKeys,
 		help:     help.New(),
-		progress: progress.New(progress.WithScaledGradient("#FFF8E7", "#C0FFE3")),
+		progress: progress.New(progress.WithScaledGradient(secondary, highlight)),
 		width:    width,
 		height:   height,
 		focused:  todo,

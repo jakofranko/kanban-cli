@@ -19,7 +19,7 @@ var tableStyle = lipgloss.NewStyle().
 var newProjectStyle = lipgloss.NewStyle().
 	Padding(1, 2).
 	Border(lipgloss.RoundedBorder(), true).
-	BorderForeground(lipgloss.Color("#C0FF3E"))
+	BorderForeground(highlightColor)
 
 var centerCtyle = lipgloss.NewStyle().
 	Align(lipgloss.Center)
@@ -226,17 +226,17 @@ func NewProjectsTable() *ProjectsTable {
 	s := table.DefaultStyles()
 	s.Header = s.Header.
 		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("241")).
+		BorderForeground(grey).
 		BorderRight(true).
 		BorderBottom(true)
 
 	s.Cell = s.Cell.
 		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("241")).
+		BorderForeground(grey).
 		BorderRight(true)
 
 	s.Selected = s.Selected.
-		Foreground(lipgloss.Color("#C0FF3E")).
+		Foreground(highlightColor).
 		Bold(true)
 
 	t.SetStyles(s)

@@ -15,7 +15,7 @@ import (
 var titleStyle = lipgloss.NewStyle().
 	Padding(1).
 	BorderStyle(lipgloss.RoundedBorder()).
-	BorderForeground(lipgloss.Color("33")).
+	BorderForeground(secondaryColor).
 	Align(lipgloss.Center)
 
 var descStyle = titleStyle

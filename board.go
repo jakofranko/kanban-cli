@@ -204,8 +204,6 @@ func (m *Board) getListHeight(height int) int {
 }
 
 func (m Board) Init() tea.Cmd {
-	// I don't understand what Init is for
-	log.Print("initing board")
 	return nil
 }
 
@@ -267,6 +265,12 @@ func (m Board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			models[form] = UpdateForm(currentTask, currentIndex)
 
 			return models[form], nil
+		case key.Matches(msg, m.keys.View):
+			models[board] = m // save current model
+			currentTask := m.lanes[m.focused].list.SelectedItem().(Task)
+			models[viewTask] = NewViewTask(m.width, m.height, currentTask)
+
+			return models[viewTask], nil
 		case key.Matches(msg, m.keys.Delete):
 			// We could do a confirmation screen, but for now just delete.
 			// Another option would be to archive items that are in the done

@@ -15,6 +15,7 @@ const (
 	board status = iota
 	form
 	projects
+	viewTask
 )
 
 func main() {
@@ -27,10 +28,12 @@ func main() {
 
 	// NewBoard is defined in board.go
 	// NewForm is defined in form.go
+	// NewProjects is defined in projects.go
+	// NewViewTask is defined in view_task.go
 	log.Println("Starting Cli...")
 
 	// TODO confirm that the new form project here doesn't matter?
-	models = []tea.Model{NewBoard(0, 0, 0), NewForm(0, 0, todo, 0), NewProjectsTable()}
+	models = []tea.Model{NewBoard(0, 0, 0), NewForm(0, 0, todo, 0), NewProjectsTable(), NewViewTask(0, 0, Task{Name: "hi"})}
 	m := models[projects]
 	p := tea.NewProgram(m)
 

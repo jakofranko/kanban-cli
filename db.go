@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"path/filepath"
 
 	_ "github.com/mattn/go-sqlite3"
 	gap "github.com/muesli/go-app-paths"
@@ -51,8 +52,11 @@ func initKanbanDir(path string) error {
 }
 
 func GetDB() TaskDB {
-	db, err := sql.Open(dbDriver, dbName)
-	// db, err := sql.Open(dbDriver, filepath.Join(getDbPath(), dbName))
+    // Uncomment for local dev
+	// db, err := sql.Open(dbDriver, dbName)
+
+    // Comment for local dev
+	db, err := sql.Open(dbDriver, filepath.Join(getDbPath(), dbName))
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -1,4 +1,4 @@
-module kanban-cli
+module github.com/jakofranko/kanban-cli
 
 go 1.22.5
 
